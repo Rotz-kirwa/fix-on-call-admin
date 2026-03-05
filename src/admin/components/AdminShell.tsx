@@ -8,6 +8,7 @@ import {
   DollarSign,
   LayoutDashboard,
   MailQuestion,
+  Menu,
   MessageSquareText,
   Moon,
   Search,
@@ -15,6 +16,7 @@ import {
   Sun,
   Truck,
   Users,
+  X,
   FileClock,
 } from "lucide-react";
 import { useAdminDemo } from "@/admin/AdminDemoContext";
@@ -45,6 +47,7 @@ export const AdminShell = () => {
   const { role } = useAdminDemo();
   const [query, setQuery] = useState("");
   const [darkMode, setDarkMode] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [searchUsers, setSearchUsers] = useState<AdminUserDTO[]>([]);
   const [searchRequests, setSearchRequests] = useState<AdminServiceDTO[]>([]);
   const [searchConversations, setSearchConversations] = useState<SupportConversationDTO[]>([]);
@@ -126,6 +129,7 @@ export const AdminShell = () => {
   };
 
   useEffect(() => {
+    setMobileNavOpen(false);
     if (location.pathname.startsWith("/admin/users") && userAlerts.length) {
       localStorage.setItem(USERS_LAST_SEEN_KEY, String(Math.max(...userAlerts.map(getUserTime))));
     }
@@ -353,7 +357,7 @@ export const AdminShell = () => {
     <div className={darkMode ? "dark" : ""}>
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-primary/10 text-slate-900">
         <div className="flex min-h-screen">
-          <aside className="w-20 lg:w-72 border-r border-slate-200 bg-white/95 backdrop-blur-xl px-3 py-4">
+          <aside className="hidden md:block w-20 lg:w-72 border-r border-slate-200 bg-white/95 backdrop-blur-xl px-3 py-4">
             <div className="mb-6 px-2 lg:px-3">
               <Link to="/" className="inline-flex items-center gap-2">
                 <img
@@ -418,10 +422,99 @@ export const AdminShell = () => {
             </div>
           </aside>
 
+          {mobileNavOpen && (
+            <div className="fixed inset-0 z-40 md:hidden">
+              <button
+                onClick={() => setMobileNavOpen(false)}
+                className="absolute inset-0 bg-slate-900/45"
+                aria-label="Close menu overlay"
+              />
+              <aside className="absolute left-0 top-0 h-full w-[84%] max-w-xs border-r border-slate-200 bg-white px-4 py-4 shadow-2xl overflow-y-auto">
+                <div className="mb-5 flex items-center justify-between">
+                  <Link to="/" className="inline-flex items-center gap-2">
+                    <img
+                      src="https://i.pinimg.com/736x/9f/11/9c/9f119c5372e0806ce7d8aa14b8de2aff.jpg"
+                      alt="Fix On Call"
+                      className="w-9 h-9 rounded-xl object-cover"
+                    />
+                    <div>
+                      <p className="font-black text-slate-900">Fix On Call</p>
+                      <p className="text-[11px] text-primary">Admin Command Center</p>
+                    </div>
+                  </Link>
+                  <button
+                    onClick={() => setMobileNavOpen(false)}
+                    className="rounded-lg border border-slate-200 bg-white p-2"
+                    aria-label="Close menu"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+
+                <nav className="space-y-2">
+                  {visibleItems.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <NavLink
+                        key={item.to}
+                        to={item.to}
+                        end={item.to === "/admin"}
+                        className={({ isActive }) =>
+                          `flex items-center justify-between gap-3 rounded-xl px-3 py-2.5 transition ${
+                            isActive
+                              ? "bg-primary/20 border border-primary/30 text-slate-900"
+                              : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                          }`
+                        }
+                      >
+                        <span className="flex items-center gap-3">
+                          <Icon className="w-4 h-4" />
+                          <span className="text-sm font-medium">{item.label}</span>
+                        </span>
+                        {item.to === "/admin/users" && sectionBadges.users > 0 && (
+                          <span className="rounded-full bg-rose-600 px-2 py-0.5 text-[10px] text-white">{sectionBadges.users}</span>
+                        )}
+                        {item.to === "/admin/requests" && sectionBadges.requests > 0 && (
+                          <span className="rounded-full bg-rose-600 px-2 py-0.5 text-[10px] text-white">{sectionBadges.requests}</span>
+                        )}
+                        {item.to === "/admin/inquiries" && sectionBadges.inquiries > 0 && (
+                          <span className="rounded-full bg-rose-600 px-2 py-0.5 text-[10px] text-white">{sectionBadges.inquiries}</span>
+                        )}
+                        {item.to === "/admin/finance" && sectionBadges.finance > 0 && (
+                          <span className="rounded-full bg-amber-500 px-2 py-0.5 text-[10px] text-white">{sectionBadges.finance}</span>
+                        )}
+                        {item.to === "/admin/partners" && sectionBadges.partners > 0 && (
+                          <span className="rounded-full bg-indigo-600 px-2 py-0.5 text-[10px] text-white">{sectionBadges.partners}</span>
+                        )}
+                        {item.to === "/admin/messages" && sectionBadges.messages > 0 && (
+                          <span className="rounded-full bg-sky-600 px-2 py-0.5 text-[10px] text-white">{sectionBadges.messages}</span>
+                        )}
+                      </NavLink>
+                    );
+                  })}
+                </nav>
+
+                <div className="mt-6 rounded-xl border border-emerald-300/30 bg-emerald-500/10 p-3">
+                  <p className="text-xs text-emerald-700 font-semibold">Live Ops Status</p>
+                  <p className="text-sm mt-1">All core systems operational</p>
+                  <p className="text-xs text-slate-600 mt-1">Avg response: 3-7 min</p>
+                </div>
+              </aside>
+            </div>
+          )}
+
           <section className="flex-1 min-w-0">
-            <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 backdrop-blur-xl px-4 lg:px-6 py-3">
+            <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 backdrop-blur-xl px-3 sm:px-4 lg:px-6 py-3">
               <div className="flex flex-wrap items-center gap-3 justify-between">
-                <div className="relative w-full max-w-xl">
+                <div className="flex w-full items-center gap-2 max-w-xl">
+                  <button
+                    onClick={() => setMobileNavOpen(true)}
+                    className="md:hidden rounded-lg border border-slate-200 bg-white p-2"
+                    aria-label="Open menu"
+                  >
+                    <Menu className="w-4 h-4" />
+                  </button>
+                  <div className="relative min-w-0 flex-1">
                   <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
                   <input
                     value={query}
@@ -438,9 +531,10 @@ export const AdminShell = () => {
                       ))}
                     </div>
                   )}
+                  </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 sm:gap-2">
                   <button
                     onClick={markSupportSeen}
                     className="relative rounded-lg border border-slate-200 bg-white p-2 hover:bg-white"
