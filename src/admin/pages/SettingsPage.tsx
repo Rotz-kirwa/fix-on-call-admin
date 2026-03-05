@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useAdminDemo } from "@/admin/AdminDemoContext";
-import { schemaDraft } from "@/admin/types";
 import { hasPermission } from "@/admin/rbac";
 import { exportToCsv } from "@/admin/utils";
 import { useEffect } from "react";
@@ -144,14 +143,6 @@ const SettingsPage = () => {
         </div>
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-4">
-        <h2 className="font-bold text-slate-900 mb-2">Data Model Schema Draft</h2>
-        <ul className="text-xs text-slate-600 space-y-1">
-          {schemaDraft.map((line) => (
-            <li key={line} className="rounded-md bg-slate-50 border border-slate-200 px-2 py-1">{line}</li>
-          ))}
-        </ul>
-      </section>
     </div>
   );
 };

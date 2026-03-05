@@ -4,6 +4,7 @@ import { exportToCsv } from "@/admin/utils";
 import { StatusBadge } from "@/admin/components/StatusBadge";
 import { adminAPI, type AdminUserDTO } from "@/lib/api";
 import { useEffect } from "react";
+import { formatNairobiDate, formatNairobiDateTime } from "@/lib/time";
 
 const UsersPage = () => {
   const { role, addAudit } = useAdminDemo();
@@ -44,7 +45,8 @@ const UsersPage = () => {
         role: user.user_type,
         status: user.is_active ? "active" : "suspended",
         locationLastSeen: "N/A",
-        createdAt: user.created_at ? user.created_at.slice(0, 10) : "N/A",
+        createdAtRaw: user.created_at || "",
+        createdAt: formatNairobiDate(user.created_at),
       })),
     [usersRaw]
   );
@@ -53,7 +55,7 @@ const UsersPage = () => {
     const filtered = normalizedUsers.filter((user) => (filterStatus === "all" ? true : user.status === filterStatus));
     return [...filtered].sort((a, b) => {
       if (sortBy === "name") return a.name.localeCompare(b.name);
-      return b.createdAt.localeCompare(a.createdAt);
+      return b.createdAtRaw.localeCompare(a.createdAtRaw);
     });
   }, [normalizedUsers, filterStatus, sortBy]);
 
@@ -169,14 +171,14 @@ const UsersPage = () => {
               <p className="text-slate-700">User ID: {selectedUser.id}</p>
               <p className="text-slate-700">Created: {selectedUser.createdAt}</p>
               <p className="text-slate-700">
-                Last Login: {selectedUserRaw?.last_login ? new Date(selectedUserRaw.last_login).toLocaleString() : "N/A"}
+                Last Login: {formatNairobiDateTime(selectedUserRaw?.last_login)}
               </p>
             </div>
             <div className="rounded-xl bg-slate-50 border border-slate-200 p-3">
               <p className="text-slate-500 text-xs">Verification + history</p>
               <p className="text-slate-700">Verification: {selectedUserRaw?.is_verified ? "KYC verified" : "KYC pending"}</p>
               <p className="text-slate-700">
-                Updated: {selectedUserRaw?.updated_at ? new Date(selectedUserRaw.updated_at).toLocaleString() : "N/A"}
+                Updated: {formatNairobiDateTime(selectedUserRaw?.updated_at)}
               </p>
               {selectedUserRaw?.vehicle_info && (
                 <p className="text-slate-700">

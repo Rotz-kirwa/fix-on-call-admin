@@ -3,6 +3,7 @@ import { useAdminDemo } from "@/admin/AdminDemoContext";
 import { hasPermission } from "@/admin/rbac";
 import { StatusBadge } from "@/admin/components/StatusBadge";
 import { supportAPI, type SupportConversationDTO, type SupportMessageDTO } from "@/lib/api";
+import { formatNairobiTime } from "@/lib/time";
 
 const MessagingPage = () => {
   const { role, addAudit } = useAdminDemo();
@@ -165,7 +166,7 @@ const MessagingPage = () => {
                 >
                   <p>{msg.body}</p>
                   <p className="text-[10px] text-slate-600 mt-1">
-                    {msg.sender} • {new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                    {msg.sender} • {formatNairobiTime(msg.created_at)}
                   </p>
                 </div>
               ))}

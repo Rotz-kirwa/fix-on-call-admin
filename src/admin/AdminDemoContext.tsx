@@ -1,6 +1,7 @@
 import { createContext, useContext, useMemo, useState } from "react";
 import { AdminRole, AuditLog } from "./types";
 import { getAdminSession } from "@/lib/session";
+import { nowInNairobiLabel } from "@/lib/time";
 
 interface AdminDemoContextValue {
   role: AdminRole;
@@ -11,7 +12,7 @@ interface AdminDemoContextValue {
 const AdminDemoContext = createContext<AdminDemoContextValue | null>(null);
 const AUDIT_KEY = "fixoncall-admin-audits";
 
-const now = () => new Date().toISOString().slice(0, 16).replace("T", " ");
+const now = () => nowInNairobiLabel();
 
 export const AdminDemoProvider = ({ children }: { children: React.ReactNode }) => {
   const [role] = useState<AdminRole>(() => {

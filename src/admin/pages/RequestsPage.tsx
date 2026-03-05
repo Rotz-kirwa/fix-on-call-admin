@@ -3,8 +3,9 @@ import { useAdminDemo } from "@/admin/AdminDemoContext";
 import { hasPermission } from "@/admin/rbac";
 import { exportToCsv } from "@/admin/utils";
 import { StatusBadge } from "@/admin/components/StatusBadge";
-import { adminAPI, type AdminServiceDTO } from "@/lib/api";
+import { adminAPI, type AdminServiceDTO, type AdminUserDTO } from "@/lib/api";
 import { CheckCheck } from "lucide-react";
+import { formatNairobiDateTime } from "@/lib/time";
 
 const timeline: Array<{ key: string; label: string }> = [
   { key: "pending", label: "created" },
@@ -35,13 +36,13 @@ const RequestsPage = () => {
   const [payment, setPayment] = useState("all");
   const [selectedRequestId, setSelectedRequestId] = useState<number | null>(null);
   const [requestsRaw, setRequestsRaw] = useState<AdminServiceDTO[]>([]);
+  const [usersById, setUsersById] = useState<Record<number, AdminUserDTO>>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [nextStatus, setNextStatus] = useState("pending");
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [readIds, setReadIds] = useState<number[]>([]);
 
-  const canRefund = hasPermission(role, "requests:refund");
   const canUpdateStatus = hasPermission(role, "dispatch:assign");
   const statusOptions = ["pending", "confirmed", "dispatched", "arrived", "in_service", "completed", "rejected"];
 
@@ -71,12 +72,21 @@ const RequestsPage = () => {
     try {
       setLoading(true);
       setError("");
-      const res = await adminAPI.getServices({
-        per_page: 300,
-        status: status === "all" ? undefined : status,
-        service_type: service === "all" ? undefined : service,
-      });
-      const rows = (res.data?.services || []) as AdminServiceDTO[];
+      const [servicesRes, usersRes] = await Promise.all([
+        adminAPI.getServices({
+          per_page: 300,
+          status: status === "all" ? undefined : status,
+          service_type: service === "all" ? undefined : service,
+        }),
+        adminAPI.getUsers({ per_page: 500 }),
+      ]);
+      const rows = (servicesRes.data?.services || []) as AdminServiceDTO[];
+      const users = (usersRes.data?.users || []) as AdminUserDTO[];
+      const mappedUsers = users.reduce<Record<number, AdminUserDTO>>((acc, user) => {
+        acc[user.id] = user;
+        return acc;
+      }, {});
+      setUsersById(mappedUsers);
       setRequestsRaw(rows);
       setSelectedRequestId((prev) => {
         if (!rows.length) return null;
@@ -115,13 +125,16 @@ const RequestsPage = () => {
               : "Not provided"),
           providerAssigned: request.assigned_to ? `Mechanic #${request.assigned_to}` : "Unassigned",
           paymentStatus: request.payment_status || "pending",
-          customerName: `User #${request.user_id}`,
+          customerName: usersById[request.user_id]?.name || `User #${request.user_id}`,
+          customerPhone: usersById[request.user_id]?.phone || "N/A",
+          customerEmail: usersById[request.user_id]?.email || "N/A",
+          customerRole: usersById[request.user_id]?.user_type || "user",
           description: request.description || "No description",
           priority: request.priority || "medium",
           createdAt: request.created_at || "",
         }))
         .filter((request) => (payment === "all" ? true : request.paymentStatus === payment)),
-    [payment, requestsRaw]
+    [payment, requestsRaw, usersById]
   );
 
   const selected = requests.find((x) => x.id === selectedRequestId);
@@ -259,8 +272,11 @@ const RequestsPage = () => {
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
               <p className="text-sm text-slate-900 font-semibold">Request #{selected.id}</p>
               <p className="text-xs text-slate-600">{selected.customerName} • {selected.area}</p>
+              <p className="text-xs text-slate-600 mt-1">Phone: {selected.customerPhone}</p>
+              <p className="text-xs text-slate-600">Email: {selected.customerEmail}</p>
+              <p className="text-xs text-slate-600">Role: {selected.customerRole}</p>
               <p className="text-xs text-slate-600 mt-1">Priority: {selected.priority}</p>
-              <p className="text-xs text-slate-600 mt-1">Created: {selected.createdAt ? new Date(selected.createdAt).toLocaleString() : "N/A"}</p>
+              <p className="text-xs text-slate-600 mt-1">Created: {formatNairobiDateTime(selected.createdAt)}</p>
             </div>
 
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
@@ -311,22 +327,6 @@ const RequestsPage = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                disabled={!canRefund}
-                onClick={() => addAudit("REFUND_ACTION", `Refund initiated for request ${selected.id}`)}
-                className="rounded-lg border border-amber-300/30 bg-amber-500/10 px-2 py-2 text-sm disabled:opacity-40"
-              >
-                Refund
-              </button>
-              <button
-                disabled={!canRefund}
-                onClick={() => addAudit("ADJUSTMENT_ACTION", `Adjustment requested for request ${selected.id}`)}
-                className="rounded-lg border border-primary/30 bg-primary/10 px-2 py-2 text-sm disabled:opacity-40"
-              >
-                Adjustment
-              </button>
-            </div>
           </>
         )}
       </aside>

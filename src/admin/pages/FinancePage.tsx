@@ -6,6 +6,7 @@ import { KpiCard } from "@/admin/components/KpiCard";
 import { StatusBadge } from "@/admin/components/StatusBadge";
 import { CreditCard, HandCoins, Landmark, Wallet } from "lucide-react";
 import { adminAPI, type AdminServiceDTO } from "@/lib/api";
+import { formatNairobiDateTime, todayNairobiKey, toNairobiDateKey } from "@/lib/time";
 
 const amountForService = (row: AdminServiceDTO) => {
   const finalAmount = Number((row as any).final_price || 0);
@@ -39,9 +40,9 @@ const FinancePage = () => {
   }, []);
 
   const dailyRevenue = useMemo(() => {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = todayNairobiKey();
     return services
-      .filter((x) => (x.payment_status || "pending") === "completed" && (x.created_at || "").slice(0, 10) === today)
+      .filter((x) => (x.payment_status || "pending") === "completed" && toNairobiDateKey(x.created_at) === today)
       .reduce((sum, x) => sum + amountForService(x), 0);
   }, [services]);
 
@@ -66,7 +67,7 @@ const FinancePage = () => {
         provider: s.assigned_to ? `Mechanic #${s.assigned_to}` : "Unassigned",
         payment_status: s.payment_status || "pending",
         service_status: s.status,
-        time: s.created_at ? new Date(s.created_at).toLocaleString() : "N/A",
+        time: formatNairobiDateTime(s.created_at),
       })),
     [services]
   );

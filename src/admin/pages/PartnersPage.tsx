@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { CheckCheck, ClipboardCheck, RefreshCcw, X } from "lucide-react";
 import { StatusBadge } from "@/admin/components/StatusBadge";
 import { supportAPI, type SupportConversationDTO } from "@/lib/api";
+import { formatNairobiDateTime, parseApiDate } from "@/lib/time";
 
 const sentAt = (row: SupportConversationDTO) => row.last_message_at || row.created_at || row.updated_at || "";
 
@@ -24,8 +25,8 @@ const PartnersPage = () => {
       });
       const rows = (res.data?.conversations || []) as SupportConversationDTO[];
       const sorted = rows.sort((a, b) => {
-        const aTime = new Date(sentAt(a) || 0).getTime();
-        const bTime = new Date(sentAt(b) || 0).getTime();
+        const aTime = parseApiDate(sentAt(a) || "")?.getTime() || 0;
+        const bTime = parseApiDate(sentAt(b) || "")?.getTime() || 0;
         return bTime - aTime;
       });
       setApplications(sorted);
@@ -130,7 +131,7 @@ const PartnersPage = () => {
                 <p className="text-xs text-slate-600 mt-1 truncate">{application.customer_phone || "No phone"}</p>
                 <p className="text-xs text-slate-600 truncate">{application.customer_email || "No email"}</p>
                 <p className="text-xs text-slate-500 mt-1">
-                  Submitted: {sentAt(application) ? new Date(sentAt(application)).toLocaleString() : "N/A"}
+                  Submitted: {formatNairobiDateTime(sentAt(application))}
                 </p>
                 <div className="mt-2">
                   {appState === "approved" && (
@@ -176,7 +177,7 @@ const PartnersPage = () => {
               <p className="text-xs text-slate-600">Phone: {selected.customer_phone || "N/A"}</p>
               <p className="text-xs text-slate-600">Email: {selected.customer_email || "N/A"}</p>
               <p className="text-xs text-slate-600 mt-1">
-                Submitted: {sentAt(selected) ? new Date(sentAt(selected)).toLocaleString() : "N/A"}
+                Submitted: {formatNairobiDateTime(sentAt(selected))}
               </p>
               <div className="mt-2">
                 {selectedState === "approved" && (
